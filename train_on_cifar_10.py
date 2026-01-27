@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from model import TransferModel 
-from data_processing import train_loader, validation_loader, test_loader
+from Data_Preparation.CIFAR_10.data_processing import train_loader, validation_loader, test_loader
 
 SEED = 42  
 random.seed(SEED)
@@ -21,12 +21,7 @@ print("Using device:", device)
 
 print("Datasets loaded")
 
-model = TransferModel(
-    num_classes=10,
-    backbone="resnet18",
-    pretrained=True,
-    dropout=0.2
-)
+model = TransferModel()
 
 model.train_head_only()
 
