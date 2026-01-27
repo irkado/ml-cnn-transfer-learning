@@ -14,24 +14,11 @@ print("Using device:", device)
 print("CUDA available:", torch.cuda.is_available())
 if torch.cuda.is_available():
     print("GPU name:", torch.cuda.get_device_name(0))
-# -------------------------
-# 2. Transforms
-# CIFAR-10 is 32x32, ResNet18 needs 224x224
-# -------------------------
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),          # flip image horizontally with 50% chance
-    transforms.RandomRotation(10),              # rotate image ±10 degrees
-    transforms.ColorJitter(
-        brightness=0.2, contrast=0.2, saturation=0.2
-    ),                                          # small color variations
-    transforms.ToTensor(),
-])
-
 
 # -------------------------
-# 3. Dataset & DataLoader (small subset for quick test)
+# 2. Dataset & DataLoader (small subset for quick test)
 # -------------------------
+#train_dataset = datasets.CIFAR100(
 train_dataset = datasets.CIFAR10(
     root="./data", train=True, download=True, transform=transform
 )
@@ -106,5 +93,5 @@ for epoch in range(epochs):
 # -------------------------
 # 8. Save model
 # -------------------------
-torch.save(model.state_dict(), "transfer_model.pth")
-print("Model saved as transfer_model.pth")
+torch.save(model.state_dict(), "transfer_model_10.pth")
+print("Model saved as transfer_model_10.pth")
