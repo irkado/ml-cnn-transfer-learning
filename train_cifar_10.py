@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from model import TransferModel 
-from Data_Preparation.CIFAR_10.data_processing import train_loader, validation_loader, test_loader
+from data_preparation.CIFAR_10.data_cifar_10 import train_loader, validation_loader, test_loader
 
 SEED = 42  
 random.seed(SEED)
