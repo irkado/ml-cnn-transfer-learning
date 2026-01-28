@@ -27,21 +27,23 @@ def evaluate(model, loader):
     correct = 0
     total = 0
     loss_sum = 0.0
+    loss_list = []
     criterion = nn.CrossEntropyLoss()
 
-    #disable gradient tracking for memory and speed eval purposes
+    # disable gradient tracking for memory and speed eval purposes
     with torch.no_grad():
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             loss = criterion(outputs, labels)
             loss_sum += loss.item()
+            loss_list.append(loss.item())
 
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 
-    return loss_sum / len(loader), correct / total
+    return loss_sum / len(loader), correct / total, loss_list
 '''eval ends here'''
 
 def train_phase(model, epochs, lr, phase_name, save_name):
@@ -66,7 +68,7 @@ def train_phase(model, epochs, lr, phase_name, save_name):
             running_loss += loss.item()
 
         train_loss = running_loss / len(train_loader)
-        val_loss, val_acc = evaluate(model, validation_loader)
+        val_loss, val_acc,_ = evaluate(model, validation_loader)
 
         print(f"{phase_name}: Epoch {epoch+1}/{epochs}, train_loss={train_loss:.4f}, val_loss={val_loss:.4f}, val_acc={val_acc*100:.2f}%")
 
@@ -79,7 +81,6 @@ def train_phase(model, epochs, lr, phase_name, save_name):
 
 
 def run_training(backbone: str):
-
     # train clasifier head only
     # freeze backbone, higher lr to adapt to 100 classes
     model = TransferModel(num_classes=100, backbone=backbone, pretrained=True, dropout=0.4).to(device)
@@ -103,7 +104,7 @@ def run_training(backbone: str):
     '''check this one too pls'''
     # final eval on test set (imprtant for Ira)
     model.load_state_dict(torch.load(f"{backbone}_cifar100_full_best.pth", map_location=device))
-    test_loss, test_acc = evaluate(model, test_loader)
+    test_loss, test_acc,_ = evaluate(model, test_loader)
     print(f"{backbone} testing: loss={test_loss:.4f} acc={test_acc*100:.2f}%")
 
 #might take a while, feel free to comment out either one if u want just one
