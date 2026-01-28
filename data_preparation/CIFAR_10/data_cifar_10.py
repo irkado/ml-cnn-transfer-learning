@@ -34,8 +34,8 @@ test_tfms = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_full = datasets.CIFAR10("./Data_Preparation/CIFAR_10/cifar_10_data", train=True, download=True, transform=train_tfms)
-test_set = datasets.CIFAR10("./Data_Preparation/CIFAR_10/cifar_10_data", train=False, download=True, transform=test_tfms)
+train_full = datasets.CIFAR10("./data_preparation/CIFAR_10/cifar_10_data", train=True, download=True, transform=train_tfms)
+test_set = datasets.CIFAR10("./data_preparation/CIFAR_10/cifar_10_data", train=False, download=True, transform=test_tfms)
 
 val_size = 5000
 train_size = len(train_full) - val_size

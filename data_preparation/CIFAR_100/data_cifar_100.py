@@ -33,8 +33,8 @@ test_transforms = transforms.Compose([
                          std=[0.229, 0.224, 0.225])
 ])
 
-train_dataset = torchvision.datasets.CIFAR100("./Data_Preparation/CIFAR_10/cifar_100_data", train=True,transform=train_transforms,download=True)
-test_dataset = torchvision.datasets.CIFAR100("./Data_Preparation/CIFAR_10/cifar_100_data", train=False,transform=test_transforms,download=True)
+train_dataset = torchvision.datasets.CIFAR100("./data_preparation/CIFAR_10/cifar_100_data", train=True,transform=train_transforms,download=True)
+test_dataset = torchvision.datasets.CIFAR100("./data_preparation/CIFAR_10/cifar_100_data", train=False,transform=test_transforms,download=True)
 
 validation_size = int(len(train_dataset) * 0.1)
 
