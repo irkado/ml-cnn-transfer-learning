@@ -33,38 +33,30 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
 
     # disable gradient tracking for memory and speed
     with torch.no_grad():
-        if not final_report:
-            loop = tqdm(loader, desc="Evaluation")
-            for i, (images, labels) in enumerate(loop):
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                loss = criterion(outputs, labels)
-                loss_sum += loss.item()
-                loss_list.append(loss.item())
+        loop = tqdm(loader, desc="Evaluation", leave=False) if not final_report else loader
 
-                preds = outputs.argmax(dim=1)
-                correct += (preds == labels).sum().item()
-                total += labels.size(0)
-        else:
-            # final report
-            for images, labels in loader:
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                loss = criterion(outputs, labels)
-                loss_sum += loss.item()
-                loss_list.append(loss.item())
+        for images, labels in loop:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss_sum += loss.item()
+            loss_list.append(loss.item())
 
-                preds = outputs.argmax(dim=1)
-                correct += (preds == labels).sum().item()
-                total += labels.size(0)
+            preds = outputs.argmax(dim=1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
 
-                true_labels.extend(labels.cpu().numpy())
-                predicted_labels.extend(preds.cpu().numpy())
+            if final_report:
+                true_labels.extend(labels.cpu().numpy().tolist())
+                predicted_labels.extend(preds.cpu().numpy().tolist())
+
+    avg_loss = loss_sum / len(loader)
+    acc = correct / total
+
 
     if final_report:
-        return loss_sum / len(loader), correct / total, loss_list, true_labels, predicted_labels
-    else:
-        return loss_sum / len(loader), correct / total
+        return avg_loss, acc, loss_list, true_labels, predicted_labels
+    return avg_loss, acc
 
 
 # added csv saving
