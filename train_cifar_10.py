@@ -3,14 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 import numpy as np
-import torch
-from torch import optim 
 from tqdm import tqdm
+import pandas as pd
 
-from model import TransferModel 
-from Data_Preparation.CIFAR_10.data_cifar_10 import train_loader, validation_loader, test_loader
+from model import TransferModel
+from data_preparation.CIFAR_10.data_cifar_10 import train_loader, validation_loader, test_loader
 
-SEED = 42  
+SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -25,37 +24,62 @@ print("Datasets loaded")
 
 # Yarik
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
-def evaluate(model, loader):
+
+def evaluate(model: TransferModel, loader, final_report: bool = False):
     model.eval()
     correct = 0
     total = 0
     loss_sum = 0.0
+    loss_list, true_labels, predicted_labels = [], [], []
+
     criterion = nn.CrossEntropyLoss()
 
-    print("Evaluation started")
-    loop = tqdm(loader, desc="Evaluation")
+    # disable gradient tracking for memory and speed
     with torch.no_grad():
-        for i,(images, labels) in enumerate(loop):
-            loop.set_description(f"Processing instance {i}")
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss_sum += loss.item()
+        if not final_report:
+            loop = tqdm(loader, desc="Evaluation")
+            for i, (images, labels) in enumerate(loop):
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, labels)
+                loss_sum += loss.item()
+                loss_list.append(loss.item())
 
-            preds = outputs.argmax(dim=1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
+                preds = outputs.argmax(dim=1)
+                correct += (preds == labels).sum().item()
+                total += labels.size(0)
+        else:
+            # final report: don't use tqdm (simpler and less noisy), collect predictions
+            for images, labels in loader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, labels)
+                loss_sum += loss.item()
+                loss_list.append(loss.item())
 
-    return loss_sum / len(loader), correct / total
+                preds = outputs.argmax(dim=1)
+                correct += (preds == labels).sum().item()
+                total += labels.size(0)
 
-def train_phase(model, epochs, lr, phase_name, save_name):
+                true_labels.extend(labels.cpu().numpy())
+                predicted_labels.extend(preds.cpu().numpy())
+
+    if final_report:
+        return loss_sum / len(loader), correct / total, loss_list, true_labels, predicted_labels
+    else:
+        return loss_sum / len(loader), correct / total
+
+
+# Reworked train_phase to build history and save to CSV like CIFAR-100
+def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, save_name: str) -> float:
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.get_trainable_params(), lr=lr)
 
-    train_loss_list, validation_loss_list, val_accuracy_list = [], [], []
-
     best_val_acc = 0.0
+    history = {'train_loss': [], 'val_loss': [], 'val_acc': []}  # save metrics for plots
+
     print(f"\n\n\n {phase_name} started")
 
     for epoch in range(epochs):
@@ -76,12 +100,12 @@ def train_phase(model, epochs, lr, phase_name, save_name):
             running_loss += loss.item()
 
         train_loss = running_loss / len(train_loader)
-        train_loss_list.append(train_loss)
-        
-        
         val_loss, val_acc = evaluate(model, validation_loader)
-        validation_loss_list.append(val_loss)
-        val_accuracy_list.append(val_acc)
+
+        # save for each epoch train_loss, val_loss, val_acc
+        history['train_loss'].append(train_loss)
+        history['val_loss'].append(val_loss)
+        history['val_acc'].append(val_acc)
 
         print(f"{phase_name}: Epoch {epoch+1}/{epochs}, train_loss={train_loss:.4f}, val_loss={val_loss:.4f}, val_acc={val_acc*100:.2f}%")
 
@@ -90,7 +114,12 @@ def train_phase(model, epochs, lr, phase_name, save_name):
             torch.save(model.state_dict(), save_name)
             print(f"saved best -> {save_name} (val_acc={best_val_acc*100:.2f}%)")
 
-    return best_val_acc,  train_loss_list, validation_loss_list , val_accuracy_list
+    # save history to csv
+    df_history = pd.DataFrame.from_dict(history, orient='index').transpose()
+    df_history.to_csv(f"{save_name.replace('.pth', '')}_training_history.csv", index=False)
+
+    return best_val_acc
+
 
 def run_training(backbone: str):
     # train classifier head only
@@ -113,10 +142,23 @@ def run_training(backbone: str):
     model.unfreeze_all()
     train_phase(model, epochs=15, lr=1e-5, phase_name=f"{backbone}: full", save_name=f"{backbone}_cifar10_full_best.pth")
 
-    # final eval on test set (important for Ira)
+    # final eval on test set
     model.load_state_dict(torch.load(f"{backbone}_cifar10_full_best.pth", map_location=device))
-    test_loss, test_acc = evaluate(model, test_loader)
+    test_loss, test_acc, loss_list, true_labels, predicted_labels = evaluate(model, test_loader, final_report=True)
+
+    # save loss list separately from final test eval
+    df_batch_losses = pd.DataFrame(loss_list, columns=['batch_loss'])
+    df_batch_losses.to_csv(f"{backbone}_test_loss_list.csv", index=False)
+
+    # save true vs predicted labels for confusion matrix later from final test eval
+    df_predictions = pd.DataFrame({
+        'True_Label': true_labels,
+        'Predicted_Label': predicted_labels
+    })
+    df_predictions.to_csv(f"{backbone}_test_predictions.csv", index=False)
+
     print(f"{backbone} testing: loss={test_loss:.4f} acc={test_acc*100:.2f}%")
+
 
 if __name__ == "__main__":
     run_training("resnet18")
