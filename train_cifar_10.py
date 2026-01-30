@@ -22,11 +22,6 @@ print("Using device:", device)
 
 print("Datasets loaded")
 
-# Yarik
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
-
-
 def evaluate(model: TransferModel, loader, final_report: bool = False):
     model.eval()
     correct = 0
@@ -51,7 +46,7 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
         else:
-            # final report: don't use tqdm (simpler and less noisy), collect predictions
+            # final report
             for images, labels in loader:
                 images, labels = images.to(device), labels.to(device)
                 outputs = model(images)
@@ -72,7 +67,7 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
         return loss_sum / len(loader), correct / total
 
 
-# Reworked train_phase to build history and save to CSV like CIFAR-100
+# added csv saving
 def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, save_name: str) -> float:
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.get_trainable_params(), lr=lr)
@@ -102,7 +97,7 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
         train_loss = running_loss / len(train_loader)
         val_loss, val_acc = evaluate(model, validation_loader)
 
-        # save for each epoch train_loss, val_loss, val_acc
+        # save for each epoch
         history['train_loss'].append(train_loss)
         history['val_loss'].append(val_loss)
         history['val_acc'].append(val_acc)
