@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 from model import TransferModel
-from data_preparation.CIFAR_100.data_cifar_100 import train_loader, validation_loader, test_loader
+from Data_Preparation.CIFAR_100.data_cifar_100 import train_loader, validation_loader, test_loader
 
 SEED = 42
 random.seed(SEED)

@@ -13,6 +13,7 @@ fsspec==2026.1.0
 ipykernel==7.1.0
 ipython==9.9.0
 ipython_pygments_lexers==1.1.1
+tdqm==4.67.1
 jedi==0.19.2
 Jinja2==3.1.6
 joblib==1.5.3
