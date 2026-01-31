@@ -35,8 +35,7 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
 
     # disable gradient tracking for memory and speed
     with torch.no_grad():
-        loop = tqdm(loader, desc="Evaluation", leave=False) if not final_report else loader
-
+        loop = tqdm(loader, desc="Evaluation : ", leave=False, disable= not final_report) # disable <-- false , than bar is visible
         for images, labels in loop:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
@@ -52,13 +51,13 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
                 true_labels.extend(labels.cpu().numpy().tolist())
                 predicted_labels.extend(preds.cpu().numpy().tolist())
 
-    avg_loss = loss_sum / len(loader)
+    avg_loss_per_batch = loss_sum / len(loader)
     acc = correct / total
 
 
     if final_report:
-        return avg_loss, acc, loss_list, true_labels, predicted_labels
-    return avg_loss, acc
+        return avg_loss_per_batch, acc, loss_list, true_labels, predicted_labels
+    return avg_loss_per_batch, acc
 
 
 # added csv saving
@@ -76,7 +75,7 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
         running_loss = 0.0
         loop = tqdm(train_loader, desc=phase_name, leave=False)
 
-        for i, (images, labels) in enumerate(loop):
+        for images, labels in loop:
             images, labels = images.to(device), labels.to(device)
 
             optimizer.zero_grad(set_to_none=True) # less memory
@@ -104,7 +103,9 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
             print(f"saved best -> {save_name} (val_acc={best_val_acc*100:.2f}%)")
 
     # save history to csv
-    df_history = pd.DataFrame.from_dict(history, orient='index').transpose()
+    # df_history = pd.DataFrame.from_dict(history, orient='index').transpose() 
+    # does exactly the same as a line below
+    df_history = pd.DataFrame(history)
     df_history.to_csv(f"{save_name.replace('.pth', '')}_training_history.csv", index=False)
 
     return best_val_acc
