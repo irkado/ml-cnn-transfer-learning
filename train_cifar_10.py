@@ -62,6 +62,7 @@ def evaluate(model: TransferModel, loader, final_report: bool = False):
 
 # added csv saving
 def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, save_name: str) -> float:
+    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.get_trainable_params(), lr=lr)
 
@@ -86,6 +87,21 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
             loop.set_postfix(loss=loss.item())
 
             running_loss += loss.item()
+
+# in case training is really slow, comment out the above loop and uncomment below (only works for cuda)
+        # for i, (images, labels) in enumerate(loop):
+        #     images, labels = images.to(device), labels.to(device)
+        #     optimizer.zero_grad(set_to_none=True)  # less memory
+        #     with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+        #         outputs = model(images)
+        #         loss = criterion(outputs, labels)
+        #
+        #     scaler.scale(loss).backward()
+        #     scaler.step(optimizer)
+        #     scaler.update()
+        #
+        #     loop.set_postfix(loss=loss.item())
+        #     running_loss += loss.item()
 
         train_loss = running_loss / len(train_loader)
         val_loss, val_acc = evaluate(model, validation_loader)
@@ -151,5 +167,5 @@ def run_training(backbone: str):
 
 
 if __name__ == "__main__":
-    run_training("resnet18")
+    #run_training("resnet18")
     run_training("mobilenet_v2")
