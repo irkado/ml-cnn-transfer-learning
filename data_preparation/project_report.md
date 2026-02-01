@@ -30,6 +30,7 @@ To answer them, all models are trained using identical data preprocessing pipeli
 
 Experiments are conducted on the CIFAR-10 and CIFAR-100 datasets. Both datasets consist of RGB images with an original resolution of 32×32 pixels.
 
+<<<<<<< HEAD
 CIFAR-10 contains 10 classes with 5,000 images per class, while CIFAR-100 contains 100 classes with 500 images per class. Although both datasets have similar total sizes, CIFAR-100 is significantly more challenging due to the increased number of classes and higher inter-class similarity.
 
 To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values.
@@ -53,6 +54,14 @@ The quantity of instances in traing set :
 
 As it can be seen from table above, we have approximately the same amount of instances for each class, consequently our model will generalize well and focus not on specific class, but rather on th whole classes.
 
+=======
+CIFAR-10 contains 10 classes with 6,000 images per class, while CIFAR-100 contains 100 classes with 600 images per class. Although both datasets have similar total sizes, CIFAR-100 is significantly more challenging due to the increased number of classes and higher inter-class similarity.
+
+To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values.
+
+The training set is split into training and validation subsets using a fixed random seed to ensure reproducibility. The final evaluation is performed on a held-out test set that is never seen during training or model selection.
+
+>>>>>>> 1d8f7068bae44d9e6e9e6b75da33e7da73f86560
 ---
 ## 4. Model Architecture
 
