@@ -7,7 +7,7 @@ from tqdm import tqdm
 import pandas as pd
 
 from model import TransferModel
-from data_preparation.CIFAR_10.data_cifar_10 import train_loader, validation_loader, test_loader
+from data_processing import train_loader, validation_loader, test_loader
 
 SEED = 42
 random.seed(SEED)
@@ -24,47 +24,51 @@ print("Using device:", device)
 
 print("Datasets loaded")
 
-def evaluate(model: TransferModel, loader, final_report: bool = False):
-    model.eval()
-    correct = 0
-    total = 0
-    loss_sum = 0.0
-    loss_list, true_labels, predicted_labels = [], [], []
-
-    criterion = nn.CrossEntropyLoss()
+def evaluate(model: TransferModel, loader, final_report: bool = False): #eval func we will use to run the model on validation (every epoch) and for testing at the end.
+    model.eval() #dropout disabled all neurons active + BatchNorm uses running stats for testing
+    #evaluation variables
+    correct = 0 #correct predictions
+    total = 0  #total samples evaluated (updated each batch)
+    loss_sum = 0.0 #total loss across all batches
+    loss_list, true_labels, predicted_labels = [], [], [] #loss_list: storing loss per batch (for plotting), true labels and predicted labels for confusion matrice
+    # loss function for evaluation
+    criterion = nn.CrossEntropyLoss() # 1.softmax(converts logits the model outputs into probabilities) 2.puniches model when correct class has low probability (loss=-log(predicted prob))
 
     # disable gradient tracking for memory and speed
-    with torch.no_grad():
-        loop = tqdm(loader, desc="Evaluation : ", leave=False, disable= not final_report) # disable <-- false , than bar is visible
-        for images, labels in loop:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss_sum += loss.item()
-            loss_list.append(loss.item())
+    with torch.no_grad(): #no weight change--> faster with less memory usage 
+        loop = tqdm(loader, desc="Evaluation", leave=False) if not final_report else loader #dont wrap loader in tqdm for  final report 
 
-            preds = outputs.argmax(dim=1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
+        for images, labels in loop: #looping over batches
+            images, labels = images.to(device), labels.to(device) # send data to gpu (needs to be same device as models)
+            outputs = model(images) #logits from the model
+            loss = criterion(outputs, labels) #getting loss using criterion
+            loss_sum += loss.item() #getting sum of losses of all batches
+            loss_list.append(loss.item()) #keeping track of loss per batch (for plots)
 
-            if final_report:
+            preds = outputs.argmax(dim=1) #pick class with highest probability for each sample
+            correct += (preds == labels).sum().item() #number of correct prediction
+            total += labels.size(0) #samples processed so far
+
+            if final_report: #keeping tabs of true labels and predicted labels for confusion matrix (false by default)
                 true_labels.extend(labels.cpu().numpy().tolist())
                 predicted_labels.extend(preds.cpu().numpy().tolist())
 
-    avg_loss_per_batch = loss_sum / len(loader)
+    avg_loss = loss_sum / len(loader) #sum losses devided by sum number of batches
     acc = correct / total
 
 
     if final_report:
-        return avg_loss_per_batch, acc, loss_list, true_labels, predicted_labels
-    return avg_loss_per_batch, acc
+        return avg_loss, acc, loss_list, true_labels, predicted_labels #return all data for testing
+    return avg_loss, acc #only these for validation
 
 
 # added csv saving
-def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, save_name: str) -> float:
-    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.get_trainable_params(), lr=lr)
+def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, save_name: str) -> float: #we take all hyper parameters as arguments (+phase and save name)
+                                                                                                               #and we return best val acc
+    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda")) #scale gradients up so that they can be represented by fp16 while avoiding underflow
+    criterion = nn.CrossEntropyLoss() #loss function for training
+    optimizer = optim.Adam(model.get_trainable_params(), lr=lr) #adaptive optimizer updates weights based on the gradient of the loss with respect to each trainable parameter
+
 
     best_val_acc = 0.0
     history = {'train_loss': [], 'val_loss': [], 'val_acc': []}  # save metrics for plots
@@ -73,32 +77,32 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
 
     for epoch in range(epochs):
         model.train()
-        running_loss = 0.0
-        loop = tqdm(train_loader, desc=phase_name, leave=False)
+        running_loss = 0.0 #running loss intialised for each epoch
+        loop = tqdm(train_loader, desc=phase_name, leave=False) # for tracking progress of each epoch
 
-        for images, labels in loop:
-            images, labels = images.to(device), labels.to(device)
+        for i, (images, labels) in enumerate(loop): #iterate over each batch
+            images, labels = images.to(device), labels.to(device) # move training set this time to gpu
 
-            optimizer.zero_grad(set_to_none=True) # less memory
+            optimizer.zero_grad(set_to_none=True) # clears old gradients (none instead of zero)-->less memory and little faster
             outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            loop.set_postfix(loss=loss.item())
+            loss = criterion(outputs, labels) # compute loss using loss function (cross entropy between model output and true labels)
+            loss.backward() # loss gradient computation
+            optimizer.step() # update weight using gradient
+            loop.set_postfix(loss=loss.item()) # updates progress bar display with current batch loss
 
-            running_loss += loss.item()
+            running_loss += loss.item() # sum of all losses in this batch
 
 # in case training is really slow, comment out the above loop and uncomment below (only works for cuda)
         # for i, (images, labels) in enumerate(loop):
         #     images, labels = images.to(device), labels.to(device)
         #     optimizer.zero_grad(set_to_none=True)  # less memory
-        #     with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+        #     with torch.cuda.amp.autocast(enabled=(device.type == "cuda")): #autocast for automatically choosing precision per operator 
         #         outputs = model(images)
         #         loss = criterion(outputs, labels)
         #
-        #     scaler.scale(loss).backward()
-        #     scaler.step(optimizer)
-        #     scaler.update()
+        #     scaler.scale(loss).backward() # we scale loss
+        #     scaler.step(optimizer) # unscale gradient
+        #     scaler.update() #increase/decrease scale depending on if there is overflow
         #
         #     loop.set_postfix(loss=loss.item())
         #     running_loss += loss.item()
@@ -119,9 +123,7 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
             print(f"saved best -> {save_name} (val_acc={best_val_acc*100:.2f}%)")
 
     # save history to csv
-    # df_history = pd.DataFrame.from_dict(history, orient='index').transpose() 
-    # does exactly the same as a line below
-    df_history = pd.DataFrame(history)
+    df_history = pd.DataFrame.from_dict(history, orient='index').transpose()
     df_history.to_csv(f"{save_name.replace('.pth', '')}_training_history.csv", index=False)
 
     return best_val_acc
