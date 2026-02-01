@@ -205,3 +205,6 @@ As shown in **Figures 11(a)** and **11(b)**, misclassifications for the *frog* c
 In **Figure 12(a)** we can see that ResNet-18 correctly classifies the *frog* class in the vast majority of cases, with only a small number of misclassifications distributed across visually similar categories such as *cat*, *deer*, *bird*, and *truck*. The dominance of the correct class indicates strong class separation and robust feature learning.
 
 In contrast, **Figure 12(b)** highlights the overall per-class performance of MobileNetV2. While most classes achieve high precision and F1-scores, visually diverse categories such as *cat* and *deer* exhibit slightly reduced performance. Compared to ResNet-18, MobileNetV2 shows marginally weaker discrimination for fine-grained animal classes, consistent with its reduced representational capacity.
+
+### Comparison between CIFAR-10 and CIFAR-100: 
+
