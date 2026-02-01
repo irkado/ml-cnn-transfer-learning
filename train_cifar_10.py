@@ -108,7 +108,7 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
         #     running_loss += loss.item()
 
         train_loss = running_loss / len(train_loader)
-        val_loss, val_acc = evaluate(model, validation_loader)
+        val_loss, val_acc = evaluate(model, validation_loader) # we run validation
 
         # save for each epoch
         history['train_loss'].append(train_loss)
@@ -116,17 +116,18 @@ def train_phase(model: TransferModel, epochs: int, lr: float, phase_name: str, s
         history['val_acc'].append(val_acc)
 
         print(f"{phase_name}: Epoch {epoch+1}/{epochs}, train_loss={train_loss:.4f}, val_loss={val_loss:.4f}, val_acc={val_acc*100:.2f}%")
-
+        # we save model with best val acc
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), save_name)
             print(f"saved best -> {save_name} (val_acc={best_val_acc*100:.2f}%)")
 
     # save history to csv
-    df_history = pd.DataFrame.from_dict(history, orient='index').transpose()
+    df_history = pd.DataFrame.from_dict(history, orient='index').transpose() #as a table
     df_history.to_csv(f"{save_name.replace('.pth', '')}_training_history.csv", index=False)
 
     return best_val_acc
+
 
 
 def run_training(backbone: str):
