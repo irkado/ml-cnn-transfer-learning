@@ -32,26 +32,41 @@ Experiments are conducted on the CIFAR-10 and CIFAR-100 datasets. Both datasets 
 
 CIFAR-10 contains 10 classes with 5,000 images per class, while CIFAR-100 contains 100 classes with 500 images per class. Although both datasets have similar total sizes, CIFAR-100 is significantly more challenging due to the increased number of classes and higher inter-class similarity.
 
-To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values.
+To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values. Here we can observe tha main difference between picture from dataset and the image to which transformation was applied : 
 
-There are few examples of our images after augumentation phase :
+![alt text](cifar_10_visual_difference.png)
+
+By means of blurring we reduce the sharp lines and corners on the original picture, consequently our model will learn visual pattern way more better.
+
+There are also few examples of our images from CIFAR-10 after augumentation phase :
 
 ![alt text](image_1.png)
 
+For CIFAR-100 :
 
-Moreover, after perfoming Normalization the intensity of our RGB channels is approximately the same, which means that our pictures have no preferences in reg, green or blue colors :
+![alt text](cifar_100_image_1.png)
+
+Moreover, after perfoming Normalization the intensity of our RGB channels is approximately the same, which means that our pictures have no preferences in red, green or blue colors :
+
+For CIFAR-10 :
 
 ![alt text](image_3.png) 
 
+For CIFAR-100 :
 
+![alt text](pixel_distrubution_cifar_100-1.png)
 
 The training set is split into training and validation subsets using a fixed random seed to ensure reproducibility. The final evaluation is performed on a held-out test set that is never seen during training or model selection.
 
-The quantity of instances in traing set :
+The quantity of instances in traing/validation/test sets for CIFAR-10 :
 
-![alt text](image_2.png)
+![alt text](cifar_10_train_validation_test_lables.png)
 
-As it can be seen from table above, we have approximately the same amount of instances for each class, consequently our model will generalize well and focus not on specific class, but rather on th whole classes.
+For CIFAR-100 in training loader : 
+
+![alt text](labels_count_cifar_100.png)
+
+As it can be seen from table above, we have approximately the same amount of instances for each class, consequently our model will generalize well and focus not on specific class, but rather on the whole classes.
 
 ---
 ## 4. Model Architecture
