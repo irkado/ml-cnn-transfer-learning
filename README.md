@@ -84,6 +84,15 @@ For each backbone (`resnet18` and `mobilenet_v2`) the script produces these file
 	- `Predicted_Label`: integer class index predicted by the model
 	This is what used for a confusion matrix and classification report.
 
+## Evaluation
+For model inference and qualitative evaluation, the function `visualize_model_predictions` provided in the `evaluation/evaluation.ipynb` notebook can be used. This function runs the trained model on a given PyTorch DataLoader and visualizes selected predictions directly, without the need for a separate inference script. Before running inference, ensure that the trained model weights are loaded using `load_state_dict`.
+
+Visualization Options:
+1. General visualization to display any predictions from the dataset.
+2. Error-focused visualization to display only misclassified samples for a specific target class.
+3. Optional `target_class`: when `target_class` is specified, the function selects images where true label matches `target_class`, but model prediction is incorrect.
+If target_class=None, predictions are visualized without any filtering.
+
 ## Workload Distribution
 **Yarik** - Data Preparation: Load and preprocess the CIFAR-10 dataset, perform normalization, resizing, and data augmentation, and split data into training, validation, and test sets
 
