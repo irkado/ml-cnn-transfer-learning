@@ -84,7 +84,7 @@ For each backbone (`resnet18` and `mobilenet_v2`) the script produces these file
 	- `Predicted_Label`: integer class index predicted by the model
 	This is what used for a confusion matrix and classification report.
 
-## Evaluation
+## Evaluation / model inference
 For model inference and qualitative evaluation, the function `visualize_model_predictions` provided in the `evaluation/evaluation.ipynb` notebook can be used. This function runs the trained model on a given PyTorch DataLoader and visualizes selected predictions directly, without the need for a separate inference script. Before running inference, ensure that the trained model weights are loaded using `load_state_dict`.
 
 Visualization Options:
