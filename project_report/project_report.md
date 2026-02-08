@@ -27,21 +27,21 @@ Experiments are conducted on the CIFAR-10 and CIFAR-100 datasets. Both datasets 
   
 CIFAR-10 contains 10 classes with 5,000 images per class, while CIFAR-100 contains 100 classes with 500 images per class. Although both datasets have similar total sizes, CIFAR-100 is significantly more challenging due to the increased number of classes and higher inter-class similarity.  
   
-To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values. Here we can observe the main difference between original and transformed images:
+To enable transfer learning from ImageNet-pretrained models, all images are resized to 224×224 pixels during data preprocessing. Training data undergoes data augmentation consisting of random horizontal flips and random cropping with padding. All images are normalized using ImageNet mean and standard deviation values. Here we, observe the main difference between the original and transformed images:
   
 ![](figures/images_data/cifar_10_visual_difference.jpeg)  
   
-By means of blurring we reduce the sharp lines and corners on the original picture, consequently our model will learn visual patterns way more better.  
+By applying blurring, sharp edges and corners are reduced, which helps the model learn visual patterns more effectively.
   
-There are also few examples of our images from CIFAR-10 after augmentation phase:  
+Below are some examples of our images from CIFAR-10 after the augmentation phase:  
   
 ![](figures/images_data/auigmented_c10.jpeg)  
   
-For CIFAR-100 :  
+For CIFAR-100:  
   
 ![](figures/images_data/augmented_c100.jpeg)  
   
-Moreover, after performing Normalization the intensity of our RGB channels is approximately the same, which means that our images have no preferences in red, green or blue colors:  
+Moreover, after normalization, the intensity distributions of the RGB channels are approximately balanced, which means that the images do not favor any particular color channel (red, green, or blue):  
   
 For CIFAR-10:  
   
@@ -112,7 +112,7 @@ As shown in **Figure 1(a)** and **Figure 1(b)**, ResNet-18 consistently achieves
 | ![](figures/cifar_100_resnet18/learning_speed.png)                                    | ![](figures/cifar_100_mobilenet_v2/accuracy_learning_speed.png)                         |  
 | **Figure 2(a):** Validation accuracy over training epochs for ResNet-18 on CIFAR-100. | **Figure 2(b):** Validation accuracy over training epochs for MobileNetV2 on CIFAR-100. |  
   
-In **Figure 2(b)** we can see that MobileNetV2 converges faster during the early training epochs, reflecting its reduced model complexity. In contrast, **Figure 2(a)** shows that ResNet-18 continues to improve over a longer training horizon and ultimately reaches a higher accuracy plateau. This highlights the trade-off between faster convergence and higher representational capacity.  
+In **Figure 2(b)** we can see that MobileNetV2 converges faster during the early training epochs, indicating increased overfitting risk. In contrast, **Figure 2(a)** shows that ResNet-18 continues to improve over a longer training horizon and ultimately reaches a higher accuracy plateau. This highlights the trade-off between faster convergence and higher representational capacity.  
   
 ---  
 #### Overfitting and Generalization  
@@ -147,14 +147,14 @@ Qualitative results in **Figure 4(a)** and **Figure 4(b)** indicate that both mo
 In **Figure 5(a)** and **Figure 5(b)** we can see that for both models misclassifications are largely restricted to semantically related food categories, indicating that learned representations capture meaningful high-level semantic structure.  
   
 ---  
-##### Woman  
+##### Confusion Analysis for the “woman” Class
   
-| Misclassified Samples                                                              | Confusion Matrix                                                                  |  
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |  
-| ![](figures/cifar_100_mobilenet_v2/images_of_wrong_labeled_women.png)              | ![](figures/cifar_100_mobilenet_v2/conf_matr_wrong_labeled_women.png)             |  
-| **Figure 6(a):** Examples of misclassified images where the true class is *woman*. | **Figure 6(b):** Confusion matrix for predictions when the true label is *woman*. |  
+| Misclassified Samples                                                              | Prediction Distribution for True Class: woman                                                                              |     |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --- |
+| ![](figures/cifar_100_mobilenet_v2/images_of_wrong_labeled_women.png)              | ![](figures/cifar_100_mobilenet_v2/conf_matr_wrong_labeled_women.png)                                                      |     |
+| **Figure 6(a):** Examples of misclassified images where the true class is *woman*. | **Figure 6(b):** Distribution of predicted classes when the true label is _woman_ (row-wise view of the confusion matrix). |     |
   
-As illustrated in **Figure 6(a)** and **Figure 6(b)**, confusion occurs primarily among closely related human categories such as *girl*, *man*, and *boy*, highlighting the difficulty of fine-grained human classification at low image resolution.  
+As illustrated in Figure 6(a) and Figure 6(b), most misclassifications for the _woman_ class occur among closely related human categories such as _girl_, _man_, and _boy_, highlighting the difficulty of fine-grained human classification at low image resolution.
   
 ### 6.2 CIFAR-10 Model Comparison: ResNet-18 vs MobileNetV2  
   
@@ -200,10 +200,10 @@ Qualitative results in **Figures 10(a)** and **10(b)** indicate that both models
 ---  
 #### Error Analysis: Class Confusion  
   
-| ResNet-18                                                                          | MobileNetV2                                                                          |  
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |  
-| ![](figures/cifar_10_resnet18/wrong_frog_classified.png)                           | ![](figures/cifar_10_mobilenet_v2/wrong_clasified_frog.png)                          |  
-| **Figure 11(a):** Misclassification patterns for the *frog* class using ResNet-18. | **Figure 11(b):** Misclassification patterns for the *frog* class using MobileNetV2. |  
+| ResNet-18                                                                          | MobileNetV2                                                                          |     |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --- |
+| ![](figures/cifar_10_resnet18/wrong_frog_classified.png)                           | ![](figures/cifar_10_mobilenet_v2/wrong_clasified_frog.png)                          |     |
+| **Figure 11(a):** Misclassification patterns for the *frog* class using ResNet-18. | **Figure 11(b):** Misclassification patterns for the *frog* class using MobileNetV2. |     |
   
 As shown in **Figures 11(a)** and **11(b)**, misclassifications for the *frog* class are limited and primarily involve visually similar categories such as *cat*, *deer*, or *truck*. Compared to CIFAR-100, confusion remains tightly constrained within a small subset of related classes, indicating stronger learned representations.  
   
@@ -218,4 +218,4 @@ In contrast, **Figure 12(b)** highlights the overall per-class performance of Mo
   
 ### Comparison between CIFAR-10 and CIFAR-100   
   
-Even though we used the same training range (5 epochs for head training, 5 epochs for last-block fine-tuning, and 15 epochs for full fine-tuning) for both datasets to keep the comparison fair, this range is more suitable for CIFAR-10. For CIFAR-100, the higher class complexity and reduced per-class data mean the model likely needs more epochs especially for the last-block fine tuning phase. We notice in **Figures 2(a)** and **2(b)**, the validation accuracy is still increasing for both architectures. So with the same 5-5-15 setup it is partially under-trained, which naturally results in lower final accuracy for the CIFAR-100.
+Even though we used the same training range (5 epochs for head training, 5 epochs for last-block fine-tuning, and 15 epochs for full fine-tuning) for both datasets to keep the comparison fair, this range is more suitable for CIFAR-10. For CIFAR-100, the higher class complexity and reduced per-class data mean the model likely needs more epochs, especially for the last-block fine tuning phase. We notice in **Figures 2(a)** and **2(b)**, the validation accuracy is still increasing for both architectures. So with the same 5-5-15 setup it is partially under-trained, which naturally results in lower final accuracy for the CIFAR-100.
