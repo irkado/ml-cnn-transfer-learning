@@ -66,14 +66,32 @@ The approximately uniform class distribution ensures that no class dominates the
 ---  
 ## 4. Model Architecture  
   
-Two convolutional neural network architectures are evaluated: ResNet-18 and MobileNetV2. Both models are initialized with pretrained ImageNet weights.  
-  
-ResNet-18 is a residual network that uses skip connections to facilitate gradient flow and enable effective training of deeper architectures. The final fully connected layer is replaced with a task-specific classification head consisting of a dropout layer followed by a linear layer.  
-  
-MobileNetV2 is a lightweight architecture designed for efficiency. It employs depthwise separable convolutions and inverted residual blocks to reduce computational cost. Similar to ResNet-18, its original classifier is replaced with a dropout layer followed by a linear classification layer.  
-  
-For both architectures, dropout is applied in the classification head, with the dropout probability gradually reduced as more layers are unfrozen during fine-tuning. This design balances regularization during early training with increased representational capacity during later fine-tuning stages.  
-  
+Two convolutional neural network architectures are evaluated: **ResNet-18** and **MobileNetV2**, both initialized with pretrained ImageNet weights to leverage rich, generic visual representations learned from large-scale data.
+
+**ResNet-18** is a residual network composed of stacked residual blocks with identity skip connections. These skip connections allow the network to learn residual mappings instead of full transformations, which improves gradient flow during backpropagation and enables stable training of deeper architectures. By directly propagating gradients across layers, residual connections mitigate vanishing gradient issues and lead to faster convergence and improved generalization.  
+
+In this project, the original fully connected classification layer is replaced with a task-specific classification head consisting of a dropout layer followed by a linear layer. This adapts the pretrained feature extractor to the target task while providing additional regularization.
+
+![](figures/images_model/resnet-block.svg)
+
+**Figure 1:** *Structure of a ResNet residual block. The skip (identity) connection allows the input to bypass convolutional layers, enabling the network to learn residual functions and improving gradient propagation during training.*
+
+**MobileNetV2** is a lightweight architecture specifically designed for computational efficiency and deployment on resource-constrained devices. Its core component is the _inverted residual block with a linear bottleneck_. Unlike classical residual blocks, MobileNetV2 first expands low-dimensional feature representations using a pointwise (1×1) convolution, applies a depthwise separable convolution for spatial filtering, and then projects the features back to a low-dimensional space using a linear 1×1 convolution.  
+
+Residual connections are applied between the narrow bottleneck layers rather than the expanded layers, which significantly reduces memory usage while preserving effective information flow. The use of linear bottlenecks avoids excessive information loss caused by nonlinear activations in low-dimensional feature spaces, leading to improved representational capacity and stability.
+
+| ![](figures/images_model/Inverted-residual-block-structure-of-MobileNetV2.png)                                                                 | ![](figures/images_model/MobileNetV2-with-inverted-residuals-Process-for-making-linear-bottlenecks-with-the.png)                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Figure 2(a):** *Structure of the MobileNetV2 inverted residual block, highlighting expansion, depthwise convolution, and linear projection.* | **Figure 2(b):** *Processing flow of inverted residuals in MobileNetV2, illustrating the formation of linear bottlenecks and residual connections.* |
+A key contributor to MobileNetV2’s efficiency is the use of _depthwise separable convolutions_, which are compared to standard convolutions in **Figure 3**. Depthwise separable convolutions factorize standard convolutions into a depthwise convolution followed by a pointwise convolution, drastically reducing the number of parameters and multiply-add operations compared to standard convolutions, while maintaining competitive accuracy.
+
+| ![](figures/images_model/Standard-convolution-operation-vs-depthwise-separable-convolution-operation.png) | ![](figures/images_model/Depthwise-separable-convolution-block.png) |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Figure 3(a)**                                                                                           | **Figure 3(b)**                                                     |
+**Figure 3:** *Comparison of standard convolution and depthwise separable convolution. (a) Standard convolution jointly performs spatial filtering and channel mixing, resulting in higher computational cost. (b) Depthwise separable convolution decomposes this operation into a depthwise convolution followed by a pointwise (1×1) convolution, significantly reducing the number of parameters and multiply-add operations while maintaining competitive accuracy.*
+
+As with ResNet-18, the original MobileNetV2 classifier is replaced with a custom classification head consisting of dropout followed by a linear layer. For both architectures, dropout is applied only in the classification head, with the dropout probability gradually reduced as additional backbone layers are unfrozen during fine-tuning. This strategy provides stronger regularization during early training when only the head is optimized, while allowing increased representational flexibility during later fine-tuning stages.  
+
 ---  
 ## 5. Training  
   
